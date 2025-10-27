@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 
 import UserData from "./components/User";
 import Controller from "./components/Controller";
