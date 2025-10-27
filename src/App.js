@@ -1,20 +1,47 @@
-import Counter from "./components/Counter";
-import Controller from "./components/Controller";
-import Header from "./components/Header";
-import Auth from "./components/Auth";
-import UserProfile from "./components/UserProfile";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
-import { useSelector } from "react-redux";
+import UserData from "./components/User";
+import Controller from "./components/Controller";
+import Loader from "./components/Loader";
+
+import { useSelector, useDispatch } from "react-redux";
+import { usersActions } from "./store/slices/users";
+
+// Flag to skip first render (out side function component to only run once)
+let isInitialized = false;
 
 function App() {
-  const isAuth = useSelector((state) => state.auth.isAuthenticated);
+  const userId = useSelector((state) => state.users.userId);
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Skip the first render
+    if (!isInitialized) {
+      isInitialized = true;
+      return;
+    }
+
+    setIsLoading(true);
+    // Fetch user data and error handling
+    const fethUserHandler = async () => {
+      const respone = await axios(
+        `https://jsonplaceholder.typicode.com/todos/${userId}`
+      );
+      const userData = respone.data;
+      dispatch(usersActions.addUser(userData));
+    };
+
+    fethUserHandler()
+      .catch((error) => console.log(error))
+      .finally(() => setIsLoading(false));
+  }, [userId, dispatch]); // React handes reserving of dispatch value to avoid triggering unless userId changing.
 
   return (
     <>
-      <Header />
-      {!isAuth && <Auth />}
-      {isAuth && <UserProfile />}
-      <Counter />
+      {isLoading ? <Loader /> : <UserData />}
       <Controller />
     </>
   );

@@ -1,9 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import counterSlice from "./slices/counter";
-import authSlice from "./slices/auth";
+import usersSlice from "./slices/users";
 
 const countStore = configureStore({
-  reducer: { counter: counterSlice, auth: authSlice },
+  reducer: { users: usersSlice },
 });
 
 export default countStore;
