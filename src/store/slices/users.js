@@ -1,11 +1,27 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+export const fetchUser = createAsyncThunk(
+  "users/fetchUser",
+  async (_, { getState, rejectWithValue }) => {
+    const { userId } = getState().users;
+    try {
+      const response = await axios(
+        `https://jsonplaceholder.typicode.com/todos/${userId}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const initialState = {
-  userId: null,
+  userId: 1,
   showUser: true,
   userData: null,
   isUserLoading: false,
+  error: null,
 };
 
 const usersSlice = createSlice({
@@ -26,34 +42,22 @@ const usersSlice = createSlice({
       state.isUserLoading = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUser.pending, (state) => {
+        state.isUserLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.isUserLoading = false;
+        state.userData = action.payload;
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        state.isUserLoading = false;
+        state.error = action.payload;
+      });
+  },
 });
 
-export const fetchUser = () => {
-  return async (dispatch, getState) => {
-    const { userId } = getState().users;
-    dispatch(usersActions.setUserLoading(true));
-
-    // Async function to fetch user data
-    const fetchData = async () => {
-      const response = await axios(
-        `https://jsonplaceholder.typicode.com/todos/${userId}`
-      );
-
-      const userData = response.data;
-      return userData;
-    };
-
-    // Trgigger the fetch wait until finished then dispatch action
-    try {
-      const userData = await fetchData();
-      dispatch(usersActions.addUser(userData));
-    } catch (error) {
-      console.log(error);
-    } finally {
-      dispatch(usersActions.setUserLoading(false));
-    }
-  };
-};
-
-export const usersActions = usersSlice.actions;
+export const { fetchNewUser, toggle } = usersSlice.actions;
 export default usersSlice.reducer;
